@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_guru/presentation/widget/appbar.dart';
 import 'package:smart_guru/presentation/widget/button.dart';
 import 'package:smart_guru/presentation/widget/textfield.dart';
 import '../../../../config/theme/colors.dart';
@@ -19,19 +20,8 @@ class _KataSandiBaruPageState extends State<KataSandiBaruPage> {
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: secondaryColor,
-        appBar: AppBar(
-            backgroundColor: secondaryColor,
-            elevation: 0,
-            leading: IconButton(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.arrow_back),
-            ),
-            title: const Text(
-              'Buat Kata Sandi Baru',
-              style:
-                  TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
-            ),
-            centerTitle: true),
+        appBar: const CustomAppBar(
+            title: 'Buat Kata Sandi Baru', showLeading: true),
         body: SafeArea(
           child: SingleChildScrollView(
             child: Padding(

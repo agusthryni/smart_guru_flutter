@@ -1,13 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:smart_guru/auth_service.dart';
 import 'package:smart_guru/config/theme/colors.dart';
-import 'package:smart_guru/presentation/widget/square_tile.dart';
+import 'package:smart_guru/presentation/service/api_function.dart';
+import 'package:smart_guru/presentation/service/snackbar.dart';
 import '../../widget/button.dart';
 import '../../widget/textfield.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:async';
 
 class RegisterPage extends StatefulWidget {
   final Function()? onTap;
@@ -25,67 +22,26 @@ class _RegisterPageState extends State<RegisterPage> {
 
   void register(String nama, String email, String password,
       String confirmPassword) async {
-    final client = http.Client();
-    const timeoutDuration = Duration(seconds: 10);
-
     if (passwordController.text != confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password dan Konfirmasi Password tidak sesuai'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      showCustomSnackBar(
+          context, 'Password dan Konfirmasi Password tidak sesuai', false);
       return;
     }
-    try {
-      final responses = await http
-          .post(
-            Uri.parse('http://${dotenv.env['API_URL']}/register'),
-            headers: <String, String>{
-              'Content-Type': 'application/json; charset=UTF-8',
-            },
-            body: jsonEncode(<String, String>{
-              'name': nama,
-              'email': email,
-              'password': password,
-              'verify_password': confirmPassword
-            }),
-          )
-          .timeout(timeoutDuration);
-      if (responses.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Akun berhasil dibuat!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pushNamed(context, '/login');
-      } else if (responses.statusCode == 500) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text('Terjadi kesalahan pada server. Silakan coba lagi nanti.'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                'Gagal membuat akun. Kode kesalahan: ${responses.statusCode}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } on TimeoutException {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Request timed out. Periksa koneksi internet Anda.'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      client.close();
+    Map<String, dynamic> sendPost = await post(
+      context,
+      'http://${dotenv.env['API_URL']}/register',
+      10,
+      <String, dynamic>{
+        'name': nama,
+        'email': email,
+        'password': password,
+        'verify_password': confirmPassword
+      },
+      'Gagal membuat akun',
+      'Akun berhasil dibuat!',
+    );
+    if (sendPost.isNotEmpty && sendPost['statusCode'] == 200) {
+      Navigator.pop(context);
     }
   }
 
@@ -190,46 +146,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     buttonColor: primaryColor,
                     textColor: secondaryColor),
                 const SizedBox(height: 20),
-                // or continue with
-                // Padding(
-                //   padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                //   child: Row(
-                //     children: [
-                //       Expanded(
-                //         child: Divider(
-                //           thickness: 0.5,
-                //           color: Colors.grey[400],
-                //         ),
-                //       ),
-                //       Padding(
-                //         padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                //         child: Text(
-                //           'atau',
-                //           style: TextStyle(color: Colors.grey[700]),
-                //         ),
-                //       ),
-                //       Expanded(
-                //         child: Divider(
-                //           thickness: 0.5,
-                //           color: Colors.grey[400],
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
-                // const SizedBox(height: 20),
-                // // google sign in buttons
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.center,
-                //   children: [
-                //     // google button
-                //     SquareTile(
-                //         onTap: () => AuthService().signInWithGoogle(),
-                //         imagePath: 'assets/icon/google.png'),
-                //   ],
-                // ),
-                // const SizedBox(height: 20),
-                // already an have account?
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [

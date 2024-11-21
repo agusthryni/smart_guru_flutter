@@ -4,21 +4,15 @@ import 'package:smart_guru/presentation/pages/aichat/aichat.dart';
 import 'package:smart_guru/presentation/pages/exam/create.dart';
 import 'package:smart_guru/presentation/pages/login/lupa_kata_sandi.dart';
 import 'package:smart_guru/presentation/pages/beranda/riwayat.dart';
-import 'package:smart_guru/presentation/pages/beranda/riwayat_lengkap.dart';
 import 'package:smart_guru/presentation/pages/beranda/beranda.dart';
 import 'package:smart_guru/presentation/pages/login/login.dart';
-import 'package:smart_guru/presentation/pages/exam/hasil_pengerjaan.dart';
-import 'package:smart_guru/presentation/pages/exam/pembahasan.dart';
 import 'package:smart_guru/presentation/pages/login/kata_sandi_baru.dart';
 import 'package:smart_guru/presentation/pages/login/otp.dart';
-import 'package:smart_guru/presentation/pages/profil/faq.dart';
 import 'package:smart_guru/presentation/pages/profil/hubungi_kami.dart';
 import 'package:smart_guru/presentation/pages/profil/profil.dart';
 import 'package:smart_guru/presentation/pages/profil/ubah_profil.dart';
 import 'package:smart_guru/presentation/pages/profil/ubah_kata_sandi.dart';
 import 'package:smart_guru/presentation/pages/register/register.dart';
-import 'package:smart_guru/presentation/pages/exam/ulasan.dart';
-import 'package:smart_guru/presentation/pages/exam/soal.dart';
 import 'package:smart_guru/presentation/pages/register/splash_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -68,27 +62,10 @@ class MyApp extends StatelessWidget {
         '/buat': (context) => CreatePage(
               onTap: () {},
             ),
-        '/soal': (context) => QuestionPage(
-              onTap: () {},
-            ),
-        '/ulasan': (context) => UlasanPage(
-              onTap: () {},
-            ),
-        '/nilai': (context) => HasilPengerjaanPage(
-              onTap: () {},
-            ),
-        '/pembahasan': (context) => PembahasanPage(
-              onTap: () {},
-            ),
         '/riwayat': (context) => RiwayatPage(
               onTap: () {},
             ),
-        '/riwayat_lengkap': (context) => RiwayatLengkapPage(
-              onTap: () {},
-            ),
-        '/aichat': (context) => AIChatPage(
-              onTap: () {},
-            ),
+        '/aichat': (context) => const AIChatPage(),
         '/profil': (context) => const ProfilPage(),
         '/ubah_profil': (context) => UbahProfilPage(
               onTap: () {},
@@ -97,9 +74,6 @@ class MyApp extends StatelessWidget {
               onTap: () {},
             ),
         '/hubungi_kami': (context) => HubungiKamiPage(
-              onTap: () {},
-            ),
-        '/faq': (context) => FAQPage(
               onTap: () {},
             ),
       },

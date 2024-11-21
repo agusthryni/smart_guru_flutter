@@ -7,7 +7,7 @@ class MyListTile extends StatelessWidget {
   final String? subtitle2;
   final Widget? leading;
   final Widget? trailing;
-  final bool dense; // Control compactness true = padat, false = banyak spasi
+  final bool dense;
   final VoidCallback? onTap;
   final Color? tileColor;
   final BorderRadius? shape;

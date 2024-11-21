@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:smart_guru/presentation/pages/aichat/aichat.dart';
 import 'package:smart_guru/presentation/pages/exam/create.dart';
+import 'package:smart_guru/presentation/pages/exam/nilai.dart';
 import 'package:smart_guru/presentation/pages/profil/profil.dart';
+import 'package:smart_guru/presentation/service/api_function.dart';
 import 'package:smart_guru/presentation/widget/button_with_icon.dart';
 import 'package:smart_guru/presentation/widget/greeting.dart';
 import 'package:smart_guru/presentation/widget/listtile.dart';
 import '../../../config/theme/colors.dart';
 import '../../widget/navbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'dart:convert';
 
 class Beranda extends StatefulWidget {
   const Beranda({super.key});
@@ -26,7 +25,7 @@ class _BerandaState extends State<Beranda> {
   static final List<Widget> _widgetOptions = <Widget>[
     const HomeWidget(),
     CreatePage(onTap: () {}),
-    AIChatPage(onTap: () {}),
+    const AIChatPage(),
     const ProfilPage(),
   ];
 
@@ -65,18 +64,18 @@ class HomeWidget extends StatefulWidget {
 
 class _HomeWidgetState extends State<HomeWidget> {
   String? _name;
+  String imageUrl = '';
 
   Future<Map<dynamic, dynamic>> getCourses() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    Map<dynamic, dynamic> jwt = JwtDecoder.decode(prefs.getString('token')!);
-    int idUser = jwt['id'] as int;
-    final responses = await http
-        .get(Uri.parse('http://${dotenv.env['API_URL']}/user/course/$idUser'));
-    if (responses.statusCode == 200) {
-      return jsonDecode(responses.body);
-    } else {
-      return {'error': 'error'};
-    }
+    final String idUser = prefs.getString('id') as String;
+    return await get(
+        context,
+        'http://${dotenv.env['API_URL']}/user/course/$idUser',
+        10,
+        '',
+        '',
+        false);
   }
 
   void getName() async {
@@ -86,11 +85,20 @@ class _HomeWidgetState extends State<HomeWidget> {
     });
   }
 
+  void getImage() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      imageUrl = prefs.getString('image') ?? '';
+      print(imageUrl);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     getCourses();
     getName();
+    getImage();
   }
 
   @override
@@ -100,12 +108,39 @@ class _HomeWidgetState extends State<HomeWidget> {
       children: [
         Padding(
           padding: const EdgeInsets.all(20.0),
-          child: MyListTile(
-            title: 'Halo, $_name',
-            subtitle: (getGreeting()),
-            leading: Icon(getGreetingIcons()),
-            trailing: const Icon(Icons.account_circle),
-            onTap: () => Navigator.pushNamed(context, '/profile'),
+          child: GestureDetector(
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.zero,
+              ),
+              child: ListTile(
+                title: Text(
+                  'Halo, $_name',
+                  style: const TextStyle(color: Colors.black),
+                ),
+                subtitle: Text(
+                  getGreeting(),
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
+                leading: Icon(getGreetingIcons()),
+                trailing: imageUrl != ''
+                    ? CircleAvatar(
+                        backgroundColor: Colors.grey[200],
+                        child: ClipOval(
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: Image.network(
+                              imageUrl,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ))
+                    : const Icon(Icons.account_circle),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+                onTap: () => Navigator.pushNamed(context, '/profil'),
+              ),
+            ),
           ),
         ),
         Container(
@@ -113,18 +148,18 @@ class _HomeWidgetState extends State<HomeWidget> {
               color: primaryColor, borderRadius: BorderRadius.circular(20)),
           margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.all(20),
-          child: Row(
+          child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Column(
                 children: [
                   const Text(
-                    'Tentukan pertanyaan Anda sesuai dengan \n uji pemahaman yang Anda inginkan disini',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: secondaryColor,
-                    ),
-                  ),
+                      'Tentukan pertanyaan Anda sesuai dengan uji pemahaman yang Anda inginkan disini',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: secondaryColor,
+                      ),
+                      textAlign: TextAlign.center),
                   const SizedBox(
                     height: 20,
                   ),
@@ -174,7 +209,7 @@ class _HomeWidgetState extends State<HomeWidget> {
         ),
         Expanded(
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: FutureBuilder<Map<dynamic, dynamic>>(
                 future: getCourses(),
                 builder: (ctx, snapshot) {
@@ -191,10 +226,14 @@ class _HomeWidgetState extends State<HomeWidget> {
                       totalTile.add(
                         MyListTile(
                           title: (item['subject']),
-                          subtitle: ('${item['score']}'),
+                          subtitle: ('${item['score'] ?? '0'}'),
                           leading: const Icon(Icons.history),
                           trailing: const Icon(Icons.chevron_right),
-                          // onTap: () => print('Item 1 tapped!'),
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => NilaiPage(
+                                    onTap: () {}, idCourse: '${item['id']}')));
+                          },
                           tileColor: const Color(0xFFEEF0FC),
                           shape: BorderRadius.circular(15.0),
                         ),
@@ -203,11 +242,16 @@ class _HomeWidgetState extends State<HomeWidget> {
                     return ListView.builder(
                       itemCount: totalTile.length,
                       itemBuilder: (context, index) {
-                        return totalTile[index];
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                          child: totalTile[index],
+                        );
                       },
                     );
                   } else {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(
+                        child: CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation(primaryColor)));
                   }
                 }),
           ),

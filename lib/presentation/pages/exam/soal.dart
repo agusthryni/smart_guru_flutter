@@ -1,12 +1,16 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:smart_guru/config/theme/colors.dart';
+import 'package:smart_guru/presentation/pages/exam/ulasan.dart';
+import 'package:smart_guru/presentation/service/api_function.dart';
 import 'package:smart_guru/presentation/widget/button.dart';
+import 'package:flutter_tex/flutter_tex.dart';
+import 'package:smart_guru/presentation/service/alert_dialog.dart';
 
 class QuestionPage extends StatefulWidget {
+  final String idSoal;
   final Function()? onTap;
-  const QuestionPage({super.key, required this.onTap});
+  const QuestionPage({super.key, required this.onTap, required this.idSoal});
 
   @override
   State<QuestionPage> createState() => _QuestionPageState();
@@ -15,10 +19,12 @@ class QuestionPage extends StatefulWidget {
 class _QuestionPageState extends State<QuestionPage> {
   final int jumlahSoal = 20;
   int _selectedIndex = -1;
-  int selectedIndex = 0; // Set initial selected index to 0
+  int selectedIndex = 0;
   final ScrollController _scrollController = ScrollController();
+  late Map<String, dynamic> courseDetail;
   List<Map<String, dynamic>> questions = [];
-  Map<int, int> userAnswers = {}; // Map to store user answers
+  List<Map<String, dynamic>> userAnswers = [];
+  String courseTitle = "Loading...";
   bool isLoading = true;
 
   void _scrollLeft() {
@@ -37,21 +43,51 @@ class _QuestionPageState extends State<QuestionPage> {
     );
   }
 
+  void showExitConfirmationDialog(BuildContext context) {
+    showConfirmationDialog(
+      context: context,
+      title: 'Konfirmasi Keluar',
+      content: 'Yakin ingin kembali? Nilai 0',
+      confirmText: 'Ya',
+      cancelText: 'Tidak',
+      onConfirm: () {
+        Navigator.popUntil(context, ModalRoute.withName('/beranda'));
+      },
+      onCancel: () {},
+    );
+  }
+
   Future<void> getSoal(String idCourse) async {
-    final url = 'https://besg.panti.my.id/course/$idCourse';
-    try {
-      final response = await http.get(Uri.parse(url));
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> data = json.decode(response.body);
-        setState(() {
-          questions = List<Map<String, dynamic>>.from(data['data']);
-          isLoading = false;
-        });
-      } else {
-        throw Exception('Failed to load questions');
-      }
-    } catch (e) {
+    Map<String, dynamic> courseQuestion = await get(
+        context,
+        'https://${dotenv.env['API_URL']}/course/$idCourse',
+        10,
+        "Gagal memuat soal",
+        "Berhasil memuat soal");
+    Map<String, dynamic> courseDetail = await get(
+        context,
+        'https://${dotenv.env['API_URL']}/course/$idCourse/detail',
+        10,
+        "Gagal memuat soal",
+        "Berhasil memuat soal",
+        false);
+
+    if (courseQuestion.isNotEmpty &&
+        courseDetail.isNotEmpty &&
+        courseQuestion['statusCode'] == 200 &&
+        courseDetail['statusCode'] == 200) {
       setState(() {
+        questions = List<Map<String, dynamic>>.from(courseQuestion['data']);
+        courseTitle = courseDetail['data']['subject_topic'];
+        userAnswers = questions.map((question) {
+          return {
+            'id': question['id'],
+            'question': question['question'],
+            'selectedIndex': -1,
+            'answerId': null,
+            'answer': null,
+          };
+        }).toList();
         isLoading = false;
       });
     }
@@ -60,7 +96,7 @@ class _QuestionPageState extends State<QuestionPage> {
   @override
   void initState() {
     super.initState();
-    getSoal('2'); // Fetch questions for course with id 2
+    getSoal(widget.idSoal); // Fetch questions for course with idSoal
   }
 
   @override
@@ -71,20 +107,31 @@ class _QuestionPageState extends State<QuestionPage> {
         backgroundColor: secondaryColor,
         elevation: 0,
         leading: GestureDetector(
-            child: const Icon(Icons.arrow_back),
-            onTap: () {
-              Navigator.pop(context);
-            }),
-        title: const Text(
-          'Trigonometri',
-          style: TextStyle(
-            color: Colors.black,
-          ),
+          onTap: () => showExitConfirmationDialog(context),
+          child: const Icon(Icons.arrow_back),
         ),
+        title: isLoading
+            ? const Text(
+                'Loading',
+                style: TextStyle(
+                  color: Colors.black,
+                ),
+              )
+            : Text(
+                courseTitle,
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.black,
+                ),
+                maxLines: 2,
+                textAlign: TextAlign.center,
+              ),
         centerTitle: true,
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(
+              child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation(primaryColor)))
           : Column(
               children: [
                 Row(
@@ -105,9 +152,9 @@ class _QuestionPageState extends State<QuestionPage> {
                               onTap: () {
                                 setState(() {
                                   selectedIndex = index;
-                                  _selectedIndex = userAnswers[
-                                          questions[selectedIndex]['id']] ??
-                                      -1; // Set the selected choice based on previous answer
+                                  _selectedIndex = userAnswers[selectedIndex]
+                                          ['selectedIndex'] ??
+                                      -1;
                                 });
                               },
                               child: Container(
@@ -149,22 +196,20 @@ class _QuestionPageState extends State<QuestionPage> {
                   ],
                 ),
                 const SizedBox(height: 20),
-                // Bagian pertanyaan
+                // pertanyaan
                 if (selectedIndex != -1)
                   Align(
                     alignment: Alignment.topLeft,
                     child: Padding(
                       padding: const EdgeInsets.all(25.0),
-                      child: Text(
-                        questions[selectedIndex]['question'] ?? '',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[800],
-                        ),
+                      child: TeXView(
+                        child: TeXViewDocument(
+                            (questions[selectedIndex]['question'] ?? '')
+                                .replaceAll(r'\\', r'\')),
                       ),
                     ),
                   ),
-                // Bagian pilihan ganda choicechip
+                // pilihan ganda choicechip
                 if (selectedIndex != -1)
                   Column(
                     children: List.generate(
@@ -174,8 +219,20 @@ class _QuestionPageState extends State<QuestionPage> {
                           visualDensity:
                               const VisualDensity(horizontal: 4, vertical: 4),
                           showCheckmark: false,
-                          label: Text(questions[selectedIndex]['answers'][index]
-                              ['content']),
+                          label: SizedBox(
+                              width: MediaQuery.of(context).size.width * 0.75,
+                              child: Text(
+                                questions[selectedIndex]['answers'][index]
+                                    ['content'],
+                                softWrap: true,
+                                maxLines: 3,
+                              )
+                              //     TeXView(
+                              //   child: TeXViewDocument((questions[selectedIndex]
+                              //           ['answers'][index]['content'])
+                              //       .replaceAll(r'\\', r'\')),
+                              // )
+                              ),
                           selected: _selectedIndex == index,
                           backgroundColor: _selectedIndex == index
                               ? primaryColor
@@ -185,19 +242,36 @@ class _QuestionPageState extends State<QuestionPage> {
                             fontSize: 16,
                             color: _selectedIndex == index
                                 ? secondaryColor
-                                : Colors.grey[700],
+                                : Colors.grey[800],
                           ),
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 100.0,
+                            horizontal: 20.0,
                           ),
                           onSelected: (selected) {
                             setState(() {
                               _selectedIndex = selected ? index : -1;
                               if (selected) {
-                                // Save user answer
-                                userAnswers[questions[selectedIndex]['id']] =
-                                    questions[selectedIndex]['answers'][index]
-                                        ['id'];
+                                // save user answer and selected index
+                                userAnswers[selectedIndex] = {
+                                  'id': questions[selectedIndex]['id'],
+                                  'question': questions[selectedIndex]
+                                      ['question'],
+                                  'selectedIndex': index,
+                                  'answerId': questions[selectedIndex]
+                                      ['answers'][index]['id'],
+                                  'answer': questions[selectedIndex]['answers']
+                                      [index]['content'],
+                                };
+                              } else {
+                                // remove the answer if unselected
+                                userAnswers[selectedIndex] = {
+                                  'id': questions[selectedIndex]['id'],
+                                  'question': questions[selectedIndex]
+                                      ['question'],
+                                  'selectedIndex': -1,
+                                  'answerId': null,
+                                  'answer': null,
+                                };
                               }
                             });
                           },
@@ -209,8 +283,12 @@ class _QuestionPageState extends State<QuestionPage> {
                   MyButton(
                     text: 'Selesai',
                     onTap: () {
-                      // print(userAnswers);
-                      Navigator.pushNamed(context, '/ulasan');
+                      Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => UlasanPage(
+                                onTap: () {},
+                                questionsAndAnswers: userAnswers,
+                                idCourse: widget.idSoal,
+                              )));
                     },
                     buttonColor: primaryColor,
                     textColor: secondaryColor,

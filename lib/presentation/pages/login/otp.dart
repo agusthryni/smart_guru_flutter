@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:smart_guru/presentation/widget/appbar.dart';
 import 'package:smart_guru/presentation/widget/button.dart';
-import 'package:smart_guru/presentation/widget/otp_tile.dart';
 import '../../../../config/theme/colors.dart';
+import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 
 class OTPPage extends StatefulWidget {
   final Function()? onTap;
@@ -12,25 +13,12 @@ class OTPPage extends StatefulWidget {
 }
 
 class _OTPPageState extends State<OTPPage> {
-  final pinCodeController = TextEditingController();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: secondaryColor,
-        appBar: AppBar(
-            backgroundColor: secondaryColor,
-            elevation: 0,
-            leading: IconButton(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.arrow_back),
-            ),
-            title: const Text(
-              'Verifikasi Email',
-              style:
-                  TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
-            ),
-            centerTitle: true),
+        appBar:
+            const CustomAppBar(title: 'Verifikasi Email', showLeading: true),
         body: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
@@ -48,7 +36,7 @@ class _OTPPageState extends State<OTPPage> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 25.0),
                     child: Text(
-                      'Masukkan kode verifikasi yang dikirim ke agus@gmail.com',
+                      'Masukkan kode verifikasi yang dikirim ke email@gmail.com',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.grey[700],
@@ -57,34 +45,22 @@ class _OTPPageState extends State<OTPPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  // Pin code tiles
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      PinCodeTile(
-                        controller: pinCodeController,
-                        length: 1,
-                        onCompleted: (code) => {},
-                      ),
-                      const SizedBox(width: 10.0),
-                      PinCodeTile(
-                        controller: pinCodeController,
-                        length: 1,
-                        onCompleted: (code) => {},
-                      ),
-                      const SizedBox(width: 10.0),
-                      PinCodeTile(
-                        controller: pinCodeController,
-                        length: 1,
-                        onCompleted: (code) => {},
-                      ),
-                      const SizedBox(width: 10.0),
-                      PinCodeTile(
-                        controller: pinCodeController,
-                        length: 1,
-                        onCompleted: (code) => {},
-                      ),
-                    ],
+                  OtpTextField(
+                    numberOfFields: 4,
+                    borderColor: const Color(0xFF283D72),
+                    showFieldAsBox: true,
+                    onCodeChanged: (String code) {},
+                    onSubmit: (String verificationCode) {
+                      showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text("Verification Code"),
+                              content:
+                                  Text('Code entered is $verificationCode'),
+                            );
+                          });
+                    },
                   ),
                   const SizedBox(height: 20),
                   GestureDetector(
@@ -97,7 +73,6 @@ class _OTPPageState extends State<OTPPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-
                   // button
                   MyButton(
                     text: 'Verifikasi',

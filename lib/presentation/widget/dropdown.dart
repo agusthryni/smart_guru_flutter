@@ -20,12 +20,9 @@ class MyDropdown extends StatefulWidget {
 }
 
 class _MyDropdownState extends State<MyDropdown> {
-  String? _selectedValue;
-
   @override
   void initState() {
     super.initState();
-    // _selectedValue = widget.initialValue;
   }
 
   @override
@@ -33,7 +30,8 @@ class _MyDropdownState extends State<MyDropdown> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: DropdownButtonFormField<String>(
-        value: _selectedValue,
+        isExpanded: true,
+        value: widget.initialValue,
         decoration: InputDecoration(
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: Colors.grey.shade400),
@@ -46,18 +44,21 @@ class _MyDropdownState extends State<MyDropdown> {
         ),
         hint: Text(widget.hintText, style: TextStyle(color: Colors.grey[500])),
         dropdownColor: Colors.white,
-        items: widget.items.map((String item) {
-          return DropdownMenuItem<String>(
-            value: item,
-            child: Text(
-              item,
-              style: const TextStyle(overflow: TextOverflow.ellipsis),
-            ),
-          );
-        }).toList(),
+        items: widget.items.isNotEmpty
+            ? widget.items.map((String item) {
+                return DropdownMenuItem<String>(
+                  value: item,
+                  child: Text(
+                    item,
+                    style: const TextStyle(overflow: TextOverflow.visible),
+                    maxLines: 2,
+                    softWrap: true,
+                  ),
+                );
+              }).toList()
+            : [],
         onChanged: (String? newValue) {
           setState(() {
-            _selectedValue = newValue;
             widget.onChanged(newValue!);
           });
         },
