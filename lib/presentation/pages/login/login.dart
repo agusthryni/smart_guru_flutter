@@ -186,45 +186,45 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 20),
                 // or continue with
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                        child: Text(
-                          'atau',
-                          style: TextStyle(color: Colors.grey[700]),
-                        ),
-                      ),
-                      Expanded(
-                        child: Divider(
-                          thickness: 0.5,
-                          color: Colors.grey[400],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // google sign in buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // google button
-                    SquareTile(
-                      onTap: () => AuthService().signInWithGoogle(),
-                      imagePath: 'assets/icon/google.png',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                // Padding(
+                //   padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                //   child: Row(
+                //     children: [
+                //       Expanded(
+                //         child: Divider(
+                //           thickness: 0.5,
+                //           color: Colors.grey[400],
+                //         ),
+                //       ),
+                //       Padding(
+                //         padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                //         child: Text(
+                //           'atau',
+                //           style: TextStyle(color: Colors.grey[700]),
+                //         ),
+                //       ),
+                //       Expanded(
+                //         child: Divider(
+                //           thickness: 0.5,
+                //           color: Colors.grey[400],
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ),
+                // const SizedBox(height: 20),
+                // // google sign in buttons
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: [
+                //     // google button
+                //     SquareTile(
+                //       onTap: () => AuthService().signInWithGoogle(),
+                //       imagePath: 'assets/icon/google.png',
+                //     ),
+                //   ],
+                // ),
+                // const SizedBox(height: 20),
                 // not a member? register now
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
